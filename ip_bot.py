@@ -1,27 +1,23 @@
-import os
-import json
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
 
-# Ambil token dari Environment Variable
-TOKEN = os.environ.get("TELEGRAM_TOKEN")
-
-# Ambil GOOGLE_CREDS dari Environment Variable dan parsing jadi dict
-google_creds_json = os.environ.get("GOOGLE_CREDS")
-creds_dict = json.loads(google_creds_json)
+# Ganti dengan token dari BotFather
+TOKEN = os.environ.get('TELEGRAM_TOKEN')
 
 # Setup akses Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    eval(os.environ.get('GOOGLE_CREDS')), scope)
 client = gspread.authorize(creds)
-sheet = client.open("IP_Bot_Data").sheet1  # Ganti dengan nama spreadsheet Anda
+sheet = client.open("IP_Bot_Data").sheet1  # Ganti sesuai nama spreadsheet kamu
 
 # Fungsi untuk command /cek <ip> <slot>
-async def cek_physical(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def cek_physical(update: Update, context: CallbackContext):
     if len(context.args) < 2:
-        await update.message.reply_text("❗ Gunakan format: /cek <ip-address> <slot>\nContoh: /cek 172.28.195.204 1")
+        update.message.reply_text("❗ Gunakan format: /cek <ip-address> <slot>\nContoh: /cek 172.28.195.204 1")
         return
 
     ip_dicari = context.args[0]
@@ -39,10 +35,18 @@ async def cek_physical(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         response = f"❌ Tidak ditemukan data untuk IP {ip_dicari} dengan SLOT {slot_dicari}."
 
-    await update.message.reply_text(response)
+    update.message.reply_text(response)
 
 # Jalankan bot
+def main():
+    updater = Updater(token=TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
+
+    # Tambahkan handler untuk command /cek
+    dispatcher.add_handler(CommandHandler("cek", cek_physical))
+
+    updater.start_polling()
+    updater.idle()
+
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("cek", cek_physical))
-    app.run_polling()
+    main()
