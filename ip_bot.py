@@ -1,16 +1,22 @@
+import os
+import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# Ganti dengan token dari BotFather
-TOKEN = '7921383527:AAFo6tNJRT-B5Z2dOKNDyEolPdfHsq4Ktk4'
+# Ambil token dari Environment Variable
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
+
+# Ambil GOOGLE_CREDS dari Environment Variable dan parsing jadi dict
+google_creds_json = os.environ.get("GOOGLE_CREDS")
+creds_dict = json.loads(google_creds_json)
 
 # Setup akses Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
-sheet = client.open("IP_Bot_Data").sheet1  # Ganti sesuai nama spreadsheet kamu
+sheet = client.open("IP_Bot_Data").sheet1  # Ganti dengan nama spreadsheet Anda
 
 # Fungsi untuk command /cek <ip> <slot>
 async def cek_physical(update: Update, context: ContextTypes.DEFAULT_TYPE):
