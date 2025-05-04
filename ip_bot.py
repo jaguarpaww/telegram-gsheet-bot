@@ -3,27 +3,20 @@ from telegram.ext import Updater, CommandHandler, CallbackContext
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
-import json  # Gunakan json, bukan eval
+import json
 
-# Ganti dengan token dari BotFather
+# Ambil token dari environment variable
 TOKEN = os.environ.get('TELEGRAM_TOKEN')
 
 # Setup akses Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-# Ambil kredensial dari environment variable dengan aman
-creds_json = os.environ.get('GOOGLE_CREDS')
-if not creds_json:
-    raise Exception("❌ Environment variable GOOGLE_CREDS belum diset.")
-
-creds_dict = json.loads(creds_json)  # ✅ Aman, tidak pakai eval
+creds_dict = json.loads(os.environ.get('GOOGLE_CREDS'))  # Ganti eval() dengan json.loads()
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Buka sheet
-sheet = client.open("IP_Bot_Data").sheet1  # Ganti jika nama spreadsheet beda
+# Gunakan spreadsheet ID langsung (lebih aman)
+sheet = client.open_by_key("1OUc6hFuWE1AswGCUatRFJSg_jMSHFHw-QTiq1-mP6HQ").sheet1
 
-# Fungsi untuk command /cek <ip> <slot>
 def cek_physical(update: Update, context: CallbackContext):
     if len(context.args) < 2:
         update.message.reply_text("❗ Gunakan format: /cek <ip-address> <slot>\nContoh: /cek 172.28.195.204 1")
@@ -46,16 +39,13 @@ def cek_physical(update: Update, context: CallbackContext):
 
     update.message.reply_text(response)
 
-# Jalankan bot
 def main():
     updater = Updater(token=TOKEN, use_context=True)
     dispatcher = updater.dispatcher
-
-    # Tambahkan handler untuk command /cek
     dispatcher.add_handler(CommandHandler("cek", cek_physical))
-
     updater.start_polling()
     updater.idle()
 
 if __name__ == '__main__':
     main()
+    
