@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: telegram-gsheet-bot
+    env: python
+    buildCommand: ""
+    startCommand: python ip_bot.py
+    envVars:
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: GOOGLE_CREDS
+        sync: false
